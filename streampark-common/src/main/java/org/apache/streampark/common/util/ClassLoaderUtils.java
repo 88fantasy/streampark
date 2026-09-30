@@ -17,7 +17,7 @@
 
 package org.apache.streampark.common.util;
 
-import org.apache.streampark.common.constants.Constants;
+import org.apache.streampark.common.configuration.Constants;
 
 import org.apache.streampark.shaded.org.slf4j.Logger;
 
@@ -39,11 +39,12 @@ public final class ClassLoaderUtils {
     }
 
     public static <R> R runAsClassLoader(ClassLoader targetClassLoader, Supplier<R> supplier) {
+        ClassLoader previousClassLoader = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(targetClassLoader);
             return supplier.get();
         } finally {
-            Thread.currentThread().setContextClassLoader(ORIGINAL_CLASS_LOADER);
+            Thread.currentThread().setContextClassLoader(previousClassLoader);
         }
     }
 

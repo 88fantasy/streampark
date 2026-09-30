@@ -51,6 +51,18 @@ class FlinkApplicationAssemblerTest {
     }
 
     @Test
+    void shouldDefaultNullStartFlagsToFalse() {
+        FlinkAppStartRequest request = new FlinkAppStartRequest();
+        request.setId(1L);
+        request.setTeamId(100000L);
+
+        FlinkApplication app = FlinkApplicationAssembler.toEntity(request);
+
+        Assertions.assertFalse(app.getRestoreOrTriggerSavepoint());
+        Assertions.assertFalse(app.getAllowNonRestored());
+    }
+
+    @Test
     void shouldConvertStartRequestToEntity() {
         FlinkAppStartRequest request = new FlinkAppStartRequest();
         request.setId(1L);
@@ -72,6 +84,7 @@ class FlinkApplicationAssemblerTest {
         app.setId(10L);
         app.setJobName("sql-job");
         app.setState(0);
+        app.setFlinkSql("encoded-sql");
 
         FlinkAppResponse response = FlinkApplicationAssembler.toResponse(app);
 
@@ -79,6 +92,7 @@ class FlinkApplicationAssemblerTest {
         Assertions.assertEquals(10L, response.getId());
         Assertions.assertEquals("sql-job", response.getJobName());
         Assertions.assertEquals(0, response.getState());
+        Assertions.assertEquals("encoded-sql", response.getFlinkSql());
     }
 
     @Test
