@@ -116,8 +116,9 @@ class SparkApplicationActionServiceImplTest {
         sparkProperties.put("spark.extraListeners", "com.example.MyOwnListener");
         service.applyLineageConfig(application, sparkProperties);
 
-        assertThat(sparkProperties).containsEntry("spark.extraListeners", "com.example.MyOwnListener");
-        // other lineage keys the user did not set are still injected
-        assertThat(sparkProperties).containsEntry("spark.openlineage.transport.type", "http");
+        // Other lineage keys the user did not set are still injected.
+        assertThat(sparkProperties)
+            .containsEntry("spark.extraListeners", "com.example.MyOwnListener")
+            .containsEntry("spark.openlineage.transport.type", "http");
     }
 }

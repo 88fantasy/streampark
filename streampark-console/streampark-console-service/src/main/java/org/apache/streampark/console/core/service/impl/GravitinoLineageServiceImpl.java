@@ -34,7 +34,6 @@ import io.openlineage.client.transports.ApiKeyTokenProvider;
 import io.openlineage.client.transports.HttpConfig;
 import io.openlineage.client.transports.HttpTransport;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
@@ -42,12 +41,12 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -76,8 +75,11 @@ public class GravitinoLineageServiceImpl implements GravitinoLineageService {
      */
     private static final Duration PENDING_RUN_TTL = Duration.ofDays(30);
 
-    @Autowired
-    private SettingService settingService;
+    private final SettingService settingService;
+
+    public GravitinoLineageServiceImpl(SettingService settingService) {
+        this.settingService = settingService;
+    }
 
     /** In-memory only — see class contract in {@link GravitinoLineageService}. */
     private final ConcurrentMap<Long, PendingRun> pendingRuns =
@@ -207,10 +209,9 @@ public class GravitinoLineageServiceImpl implements GravitinoLineageService {
         OpenLineage.Run run = openLineage.newRun(runId, facetsBuilder.build());
         OpenLineage.Job job = openLineage.newJob(jobNamespace, jobName, openLineage.newJobFacetsBuilder().build());
 
-        List<OpenLineage.InputDataset> inputs = new ArrayList<>();
-        for (LineageDataset input : pipeline.inputs()) {
-            inputs.add(openLineage.newInputDataset(input.namespace(), input.name(), null, null));
-        }
+        List<OpenLineage.InputDataset> inputs = pipeline.inputs().stream()
+            .map(input -> openLineage.newInputDataset(input.namespace(), input.name(), null, null))
+            .collect(Collectors.toList());
         List<OpenLineage.OutputDataset> outputs =
             Collections.singletonList(
                 openLineage.newOutputDataset(

@@ -18,10 +18,12 @@
 package org.apache.streampark.console.core.watcher;
 
 import org.apache.streampark.console.core.enums.FlinkAppStateEnum;
+import org.apache.streampark.console.core.service.GravitinoLineageService;
 
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 /**
  * Covers only the pure COMPLETE-vs-FAIL mapping this watcher adds for lineage terminal events —
@@ -30,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class FlinkAppHttpWatcherLineageTest {
 
-    private final FlinkAppHttpWatcher watcher = new FlinkAppHttpWatcher();
+    private final FlinkAppHttpWatcher watcher = new FlinkAppHttpWatcher(mock(GravitinoLineageService.class));
 
     @Test
     void finishedAndSucceededMapToLineageSuccess() {

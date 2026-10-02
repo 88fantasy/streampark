@@ -100,8 +100,11 @@ public class FlinkAppHttpWatcher {
     @Autowired
     private SavepointService savepointService;
 
-    @Autowired
-    private GravitinoLineageService gravitinoLineageService;
+    private final GravitinoLineageService gravitinoLineageService;
+
+    public FlinkAppHttpWatcher(GravitinoLineageService gravitinoLineageService) {
+        this.gravitinoLineageService = gravitinoLineageService;
+    }
 
     // track interval every 5 seconds
     public static final Duration WATCHING_INTERVAL = Duration.ofSeconds(5);

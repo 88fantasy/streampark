@@ -22,6 +22,7 @@ import org.apache.streampark.console.core.entity.FlinkApplication;
 import org.apache.streampark.console.core.service.SettingService;
 import org.apache.streampark.flink.core.lineage.LineagePipeline;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,6 +30,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -47,6 +49,11 @@ class FlinkApplicationActionServiceImplTest {
 
     @InjectMocks
     private FlinkApplicationActionServiceImpl service;
+
+    @BeforeEach
+    void injectSettingService() {
+        ReflectionTestUtils.setField(service, "settingService", settingService);
+    }
 
     private static LineageConfig enabledConfig(boolean nativeListenerEnable) {
         LineageConfig config = new LineageConfig();

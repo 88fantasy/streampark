@@ -78,22 +78,21 @@ import org.apache.streampark.console.core.watcher.FlinkAppHttpWatcher;
 import org.apache.streampark.console.core.watcher.FlinkClusterWatcher;
 import org.apache.streampark.console.core.watcher.FlinkK8sWatcherWrapper;
 import org.apache.streampark.flink.client.FlinkClient;
-import org.apache.streampark.flink.client.bean.CancelRequest;
-import org.apache.streampark.flink.client.bean.CancelResponse;
-import org.apache.streampark.flink.client.bean.JobClientTarget;
-import org.apache.streampark.flink.client.bean.SavepointCancelOptions;
-import org.apache.streampark.flink.client.bean.SubmitApplicationSpec;
-import org.apache.streampark.flink.client.bean.SubmitClusterSpec;
-import org.apache.streampark.flink.client.bean.SubmitRequest;
-import org.apache.streampark.flink.client.bean.SubmitResponse;
+import org.apache.streampark.flink.client.FlinkShimsProxy;
+import org.apache.streampark.flink.client.request.CancelRequest;
+import org.apache.streampark.flink.client.request.JobClientTarget;
+import org.apache.streampark.flink.client.request.SubmitApplicationSpec;
+import org.apache.streampark.flink.client.request.SubmitClusterSpec;
+import org.apache.streampark.flink.client.request.SubmitRequest;
+import org.apache.streampark.flink.client.response.CancelResponse;
+import org.apache.streampark.flink.client.response.SubmitResponse;
 import org.apache.streampark.flink.core.lineage.LineagePipeline;
-import org.apache.streampark.flink.kubernetes.FlinkK8sWatcher;
+import org.apache.streampark.flink.kubernetes.FlinkKubernetesWatcher;
 import org.apache.streampark.flink.kubernetes.helper.KubernetesDeploymentHelper;
 import org.apache.streampark.flink.kubernetes.ingress.IngressController;
 import org.apache.streampark.flink.kubernetes.model.TrackId;
 import org.apache.streampark.flink.packer.pipeline.BuildResult;
 import org.apache.streampark.flink.packer.pipeline.ShadedBuildResponse;
-import org.apache.streampark.flink.proxy.FlinkShimsProxy;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.JobID;
@@ -201,8 +200,11 @@ public class FlinkApplicationActionServiceImpl
     @Autowired
     private FlinkK8sWatcherWrapper k8sWatcherWrapper;
 
-    @Autowired
-    private GravitinoLineageService gravitinoLineageService;
+    private final GravitinoLineageService gravitinoLineageService;
+
+    public FlinkApplicationActionServiceImpl(GravitinoLineageService gravitinoLineageService) {
+        this.gravitinoLineageService = gravitinoLineageService;
+    }
 
     private final Map<Long, CompletableFuture<SubmitResponse>> startFutureMap =
         new ConcurrentHashMap<>();
@@ -440,12 +442,12 @@ public class FlinkApplicationActionServiceImpl
 
         Map<String, Object> extraParameter = new HashMap<>(0);
         final List<LineagePipeline> lineagePipelines;
-        if (application.isFlinkSql()) {
+        if (application.isFlinkSqlJob()) {
             FlinkSql flinkSql = flinkSqlService.getEffective(application.getId(), true);
             // Get the sql of the replaced placeholder
             String realSql = variableService.replaceVariable(application.getTeamId(), flinkSql.getSql());
             flinkSql.setSql(DeflaterUtils.zipString(realSql));
-            extraParameter.put(ConfigKeys.KEY_FLINK_SQL(null), flinkSql.getSql());
+            extraParameter.put(ApplicationOptions.SQL.key(), flinkSql.getSql());
             lineagePipelines = extractLineagePipelines(flinkEnv, application, realSql);
         } else {
             lineagePipelines = new ArrayList<>();
@@ -540,7 +542,7 @@ public class FlinkApplicationActionServiceImpl
         }
         try {
             List<LineagePipeline> pipelines = FlinkShimsProxy.proxy(
-                flinkEnv.getFlinkVersion(),
+                FlinkEnvUtils.version(flinkEnv),
                 classLoader -> {
                     try {
                         Class<?> clazz = classLoader.loadClass(FLINK_SQL_LINEAGE_EXTRACTOR_CLASS);
@@ -907,7 +909,7 @@ public class FlinkApplicationActionServiceImpl
         applyNativeLineageListenerConfig(application, properties);
 
         Map<String, String> dynamicProperties =
-            FlinkConfigurationUtils.extractDynamicPropertiesAsJava(runtimeProperties);
+            JvmOptionsParser.parse(runtimeProperties).toMap();
         // Applied last so a key the user set explicitly in Dynamic Properties always wins over
         // anything this method injected above, including the native lineage listener config.
         properties.putAll(dynamicProperties);

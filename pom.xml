@@ -138,6 +138,8 @@
         <flatten-maven-plugin.version>1.6.0</flatten-maven-plugin.version>
         <streampark.shaded.package>org.apache.streampark.shaded</streampark.shaded.package>
         <httpclient5.version>5.4.2</httpclient5.version>
+        <okhttp.version>4.11.0</okhttp.version>
+        <okio.version>3.5.0</okio.version>
         <lombok.version>1.18.24</lombok.version>
         <jupiter.version>5.9.1</jupiter.version>
         <mockito.version>3.4.6</mockito.version>

@@ -134,8 +134,11 @@ public class SparkApplicationActionServiceImpl
     @Autowired
     private ResourceService resourceService;
 
-    @Autowired
-    private SettingService settingService;
+    private final SettingService settingService;
+
+    public SparkApplicationActionServiceImpl(SettingService settingService) {
+        this.settingService = settingService;
+    }
 
     private final Map<Long, CompletableFuture<SubmitResponse>> startJobFutureMap = new ConcurrentHashMap<>();
 

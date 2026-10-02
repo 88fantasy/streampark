@@ -133,6 +133,9 @@ class GravitinoLineageServiceImplTest {
     void emitTerminalNoOpsWhenNoPendingRunIsTracked() {
         // Must not throw even though nothing was ever tracked for this appId.
         service.emitTerminal(999L, true);
+
+        verifyNoInteractions(settingService);
+        assertThat(service.hasPendingRun(999L)).isFalse();
     }
 
     @Test
